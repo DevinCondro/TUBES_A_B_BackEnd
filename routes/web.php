@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,5 +15,13 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    
+    return view('dashboard'); /* arahkan ke halaman dashboard */
+    });
+    //Route Resource
+    Route::resource('/pengguna', \App\Http\Controllers\PenggunaController::class);
+    Route::resource('/kamar', \App\Http\Controllers\KamarController::class);
+    Route::resource('/makanan', \App\Http\Controllers\MakananController::class);
+
+    Route::get('/sesi',[SessionController::class, 'index']);
+    Route::post('/sesi/login',[SessionController::class, 'login']);

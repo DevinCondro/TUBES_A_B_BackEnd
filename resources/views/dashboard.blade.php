@@ -147,7 +147,7 @@ role="button">
 <!-- Main Footer -->
 <footer class="main-footer">
     <!-- To the right -->
-    <div class="float-right d-none d-sm-inline"> 200710729_Chrystian Devin Condro
+    <div class="float-right d-none d-sm-inline"> Tubes_B
         </div>
         <!-- Default to the left -->
         <strong>Copyright &copy; {{ date('Y') }} <a

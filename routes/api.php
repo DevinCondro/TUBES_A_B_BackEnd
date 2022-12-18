@@ -17,3 +17,41 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('register', 'AuthController@register');
+Route::post('login', 'AuthController@login');
+
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::get('user', 'userController@index');
+    Route::get('user/{id}', 'userController@show');
+    Route::post('user', 'userController@store');
+    Route::put('user/{id}', 'userController@update');
+    Route::delete('user/{id}', 'userController@destroy');
+});
+
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::get('kamar', 'KamarController@index');
+    Route::get('kamar/{id}', 'KamarController@show');
+    Route::post('kamar', 'KamarController@store');
+    Route::put('kamar/{id}', 'KamarController@update');
+    Route::delete('kamar/{id}', 'KamarController@destroy');
+});
+
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::get('makanan', 'MakananController@index');
+    Route::get('makanan/{id}', 'MakananController@show');
+    Route::post('makanan', 'MakananController@store');
+    Route::put('makanan/{id}', 'MakananController@update');
+    Route::delete('makanan/{id}', 'MakananController@destroy');
+});
+
+Route::group(['middleware' => 'auth:api'], function(){
+    Route::get('ballroom', 'BallroomController@index');
+    Route::get('ballroom/{id}', 'BallroomController@show');
+    Route::post('ballroom', 'BallroomController@store');
+    Route::put('ballroom/{id}', 'BallroomController@update');
+    Route::delete('ballroom/{id}', 'BallroomController@destroy');
+});
+
+Route::get('email/verify/{id}', 'EmailController@verify')->name('verificationapi.verify');
+Route::get('email/resend', 'EmailController@resend')->name('verificationapi.resend');

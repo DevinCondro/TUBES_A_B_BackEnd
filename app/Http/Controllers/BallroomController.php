@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Makanan;
+use App\Models\Ballroom;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator; 
 
-class MakananController extends Controller
+class BallroomController extends Controller
 {
- //Method untuk menampilkan semua data product (READ)
+    //Method untuk menampilkan semua data product (READ)
  public function index(){
     $bukus = Buku::all(); //Mengambil semua data Buku
 

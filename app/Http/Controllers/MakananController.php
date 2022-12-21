@@ -4,130 +4,143 @@ namespace App\Http\Controllers;
 
 use App\Models\Makanan;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MakananResource;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Validator;
 
 class MakananController extends Controller
 {
- //Method untuk menampilkan semua data product (READ)
- public function index(){
-    $bukus = Buku::all(); //Mengambil semua data Buku
+    public function index(){
+        $makanans = Makanan::all(); //Mengambil semua data Makanan
+      
+      $Makanan= Makanan::latest()->get(); //Mengambil semua data Makanan
 
-    if(count($bukus) > 0){
-        return response([
-            'message' => 'Retrieve All Success',
-            'data' => $bukus
-        ], 200);
-    } //Return data semua buku dalam bentuk JSON
+      if(count($makanans) > 0){
+          return response([
+              'message' => 'Retrieve All Success',
+              'data' => $makanans
+          ], 200);
+      } //Return data semua Makanan dalam bentuk JSON
 
-    return response([
-        'message' => 'Empty',
-        'data' => null
-    ], 400); //Return message data buku kosong
-}
+      return response([
+          'message' => 'Empty',
+          'data' => null
+      ], 400); //Return message data Makanan kosong
 
-//Method untuk menampilkan 1 data buku (SEARCH)
-public function show($id){
-    $bukus = Buku::find($id); //Mencari data buku berdasarkan id
+      return new MakananResource(true, 'List Data Makanan', $Makanan);
+  }
 
-    if(!is_null($bukus)){
-        return response([
-            'message' => 'Retrieve Buku Success',
-            'data' => $bukus
-        ], 200);
-    } //Return data semua buku dalam bentuk JSON
+  //Method untuk menampilkan 1 data Makanan (SEARCH)
+  public function show($id){
+      $makanans = Makanan::find($id); //Mencari data Makanan berdasarkan id
 
-    return response([
-        'message' => 'Buku Not Found',
-        'data' => null
-    ], 400); //Return message data buku kosong
-}
+      if(!is_null($makanans)){
+          return response([
+              'message' => 'Retrieve Makanan Success',
+              'data' => $makanans
+          ], 200);
+      } //Return data semua Makanan dalam bentuk JSON
 
-//Method untuk menambah 1 data buku baru (CREATE)
-public function store(Request $request){
-    $storeData = $request->all(); //Mengambil semua input dari API Client
-    $validate = Validator::make($storeData, [
-        'judulBuku' => 'required|max:60|regex:/^[\pL\s\-]+$/u',
-        'isbn' => 'required|unique:bukus|numeric',
-        'pengarang' => 'required',
-        'tahunTerbit' => 'required|numeric|digits:4'
-    ]); //Membuat rule validasi input
+      return response([
+          'message' => 'Makanan Not Found',
+          'data' => null
+      ], 400); //Return message data Makanan kosong
 
-    if($validate->fails()){
-        return response(['message' => $validate->errors()], 400); //Return error invalid input
-    }
+      return view ('Makanan.show', compact('Makanan'));
+  }
 
-    $buku = Buku::create($storeData);
+  //Method untuk menambah 1 data Makanan baru (CREATE)
+  public function store(Request $request){
+      $storeData = $request->all(); //Mengambil semua input dari API Client
+      $validator = Validator::make($storeData, [
+          'nama' => 'required',
+          'jenis' => 'required',
+          'jumlah' => 'required',
+      ]); //Membuat rule validasi input
 
-    return response([
-        'message' => 'Add Buku Success',
-        'data' => $buku
-    ], 200); //Return message data buku baru dalam bentuk JSON
-}
+      if($validator->fails()){
+          return response(['message' => $validator->errors()], 400); //Return error invalid input
+      }
 
-//Method untuk menghapus 1 data product (DELETE)
-public function destroy($id){
-    $buku = Buku::find($id); //Mencari data product berdasarkan id
+      $makanan = Makanan::create($storeData);
 
-    if(is_null($buku)){
-        return response([
-            'message' => 'Buku Not Found',
-            'date' => null
+      return response([
+          'message' => 'Add Makanan Success',
+          'data' => $makanan
+      ], 200); //Return message data Makanan baru dalam bentuk JSON
+
+      return new MakananResource (true, 'Data Makanan Berhasil Ditambahkan!', $makanan);
+  }
+
+  //Method untuk menghapus 1 data product (DELETE)
+  public function destroy(Makanan $makanan,$id){
+      $makanan = Makanan::find($id); //Mencari data product berdasarkan id
+
+      if(is_null($makanan)){
+          return response([
+              'message' => 'Makanan Not Found',
+              'date' => null
+          ], 404);
+      } //Return message saat data Makanan tidak ditemukan
+
+      if($makanan->delete()){
+          return response([
+              'message' => 'Delete Makanan Success',
+              'data' => $makanan
+          ], 200);
+          $makanan = Makanan::where('id', $id)->firstorfail()->delete();
+          return redirect()->route('Makanan.index')->with(['success'=>'Data Berhasil Dihapus!']);
+      } //Return message saat berhasil menghapus data Makanan
+
+      return response([
+          'message' => 'Delete Makanan Failed',
+          'data' => null,
+      ], 400);
+
+      
+  }
+
+  //Method untuk mengubah 1 data Makanan (UPDATE)
+  public function update(Request $request, $id){
+        $makanan = Makanan::find($id); //Mencari data Makanan berdasarkan id
+
+        $updateData = $request->all(); //Mengambil semua input dari API Client
+        $validator = Validator::make($updateData, [
+            'nama' => 'required',
+            'jenis' => 'required',
+            'jumlah' => 'required',
+        ]); //Membuat rule validasi input
+
+        if($validator->fails()){
+            return response()->json($validator->errors(), 400);
+        }
+        
+        
+        if($makanan) {
+
+            //update post
+            $makanan->nama = $updateData['nama']; //Edit judulMakanan
+            $makanan->jenis = $updateData['jenis']; //Edit isbn
+            $makanan->jumlah = $updateData['jumlah']; //Edit tahunterbit
+
+            if($makanan->save()){
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Update Makanan Berhasil',
+                    'data'    => $makanan  
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Update Makanan Gagal',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Makanan Not Found',
         ], 404);
-    } //Return message saat data buku tidak ditemukan
-
-    if($buku->delete()){
-        return response([
-            'message' => 'Delete Buku Success',
-            'data' => $buku
-        ], 200);
-    } //Return message saat berhasil menghapus data buku
-
-    return response([
-        'message' => 'Delete Buku Failed',
-        'data' => null,
-    ], 400);
-}
-
-//Method untuk mengubah 1 data buku (UPDATE)
-public function update(Request $request, $id){
-    $buku = Buku::find($id); //Mencari data buku berdasarkan id
-
-    if(is_null($buku)){
-        return response([
-            'message' => 'Buku Not Found',
-            'data' => null
-        ], 404);
-    } //Return message saat data buku tidak ditemukan
-
-    $updateData = $request->all();
-    $validate = Validator::make($updateData, [
-        'judulBuku' => 'required|max:60|regex:/^[\pL\s\-]+$/u',
-        'isbn' => 'required|numeric',
-        'pengarang' => 'required',
-        'tahunTerbit' => 'required|numeric|digits:4'
-    ]); //Membuat rule validasi input
-
-    if($validate->fails()){
-        return response(['message' => $validate->errors()], 400); //Return error invalid input
     }
-
-    $buku->judulBuku = $updateData['judulBuku']; //Edit judulBuku
-    $buku->isbn = $updateData['isbn']; //Edit isbn
-    $buku->tahunTerbit = $updateData['tahunTerbit']; //Edit tahunterbit
-    $buku->pengarang = $updateData['pengarang']; //Edit pengarang
-
-    if($buku->save()){
-        return response([
-            'message' => 'Update Buku Success',
-            'data' => $buku
-        ], 200);
-    } //Return data buku yang telah di EDIT dalam bentuk JSON
-
-    return response([
-        'message' => 'Update Buku Failed',
-        'data' => null
-    ], 400);
-}
 }

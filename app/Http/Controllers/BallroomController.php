@@ -2,132 +2,148 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ballroom;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\BallroomResource;
+use App\Models\Ballroom;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Validator;
 
 class BallroomController extends Controller
 {
-    //Method untuk menampilkan semua data product (READ)
- public function index(){
-    $bukus = Buku::all(); //Mengambil semua data Buku
+    public function index(){
+        $ballrooms = Ballroom::all(); //Mengambil semua data Ballroom
+      
+      $ballrooms= Ballroom::latest()->get(); //Mengambil semua data Ballroom
 
-    if(count($bukus) > 0){
-        return response([
-            'message' => 'Retrieve All Success',
-            'data' => $bukus
-        ], 200);
-    } //Return data semua buku dalam bentuk JSON
+      if(count($ballrooms) > 0){
+          return response([
+              'message' => 'Retrieve All Success',
+              'data' => $ballrooms
+          ], 200);
+      } //Return data semua Ballroom dalam bentuk JSON
 
-    return response([
-        'message' => 'Empty',
-        'data' => null
-    ], 400); //Return message data buku kosong
-}
+      return response([
+          'message' => 'Empty',
+          'data' => null
+      ], 400); //Return message data Ballroom kosong
 
-//Method untuk menampilkan 1 data buku (SEARCH)
-public function show($id){
-    $bukus = Buku::find($id); //Mencari data buku berdasarkan id
+      return new BallroomResource(true, 'List Data Ballroom', $ballrooms);
+  }
 
-    if(!is_null($bukus)){
-        return response([
-            'message' => 'Retrieve Buku Success',
-            'data' => $bukus
-        ], 200);
-    } //Return data semua buku dalam bentuk JSON
+  //Method untuk menampilkan 1 data Ballroom (SEARCH)
+  public function show($id){
+      $ballrooms = Ballroom::find($id); //Mencari data Ballroom berdasarkan id
 
-    return response([
-        'message' => 'Buku Not Found',
-        'data' => null
-    ], 400); //Return message data buku kosong
-}
+      if(!is_null($ballrooms)){
+          return response([
+              'message' => 'Retrieve Ballroom Success',
+              'data' => $ballrooms
+          ], 200);
+      } //Return data semua Ballroom dalam bentuk JSON
 
-//Method untuk menambah 1 data buku baru (CREATE)
-public function store(Request $request){
-    $storeData = $request->all(); //Mengambil semua input dari API Client
-    $validate = Validator::make($storeData, [
-        'judulBuku' => 'required|max:60|regex:/^[\pL\s\-]+$/u',
-        'isbn' => 'required|unique:bukus|numeric',
-        'pengarang' => 'required',
-        'tahunTerbit' => 'required|numeric|digits:4'
-    ]); //Membuat rule validasi input
+      return response([
+          'message' => 'Ballroom Not Found',
+          'data' => null
+      ], 400); //Return message data Ballroom kosong
 
-    if($validate->fails()){
-        return response(['message' => $validate->errors()], 400); //Return error invalid input
-    }
+      return view ('Ballroom.show', compact('Ballroom'));
+  }
 
-    $buku = Buku::create($storeData);
+  //Method untuk menambah 1 data Ballroom baru (CREATE)
+  public function store(Request $request){
+      $storeData = $request->all(); //Mengambil semua input dari API Client
+      $validator = Validator::make($storeData, [
+          'namaPemesan' => 'required',
+          'tempat' => 'required',
+          'fasilitas' => 'required',
+          'jenisPembayaran' => 'required',
+      ]); //Membuat rule validasi input
 
-    return response([
-        'message' => 'Add Buku Success',
-        'data' => $buku
-    ], 200); //Return message data buku baru dalam bentuk JSON
-}
+      if($validator->fails()){
+          return response(['message' => $validator->errors()], 400); //Return error invalid input
+      }
 
-//Method untuk menghapus 1 data product (DELETE)
-public function destroy($id){
-    $buku = Buku::find($id); //Mencari data product berdasarkan id
+      $ballrooms = Ballroom::create($storeData);
 
-    if(is_null($buku)){
-        return response([
-            'message' => 'Buku Not Found',
-            'date' => null
+      return response([
+          'message' => 'Add Ballroom Success',
+          'data' => $ballrooms
+      ], 200); //Return message data Ballroom baru dalam bentuk JSON
+
+      return new BallroomResource (true, 'Data Ballroom Berhasil Ditambahkan!', $ballrooms);
+  }
+
+  //Method untuk menghapus 1 data product (DELETE)
+  public function destroy(Ballroom $ballrooms,$id){
+      $ballrooms = Ballroom::find($id); //Mencari data product berdasarkan id
+
+      if(is_null($ballrooms)){
+          return response([
+              'message' => 'Ballroom Not Found',
+              'date' => null
+          ], 404);
+      } //Return message saat data Ballroom tidak ditemukan
+
+      if($ballrooms->delete()){
+          return response([
+              'message' => 'Delete Ballroom Success',
+              'data' => $ballrooms
+          ], 200);
+          $ballrooms = Ballroom::where('id', $id)->firstorfail()->delete();
+          return redirect()->route('Ballroom.index')->with(['success'=>'Data Berhasil Dihapus!']);
+      } //Return message saat berhasil menghapus data Ballroom
+
+      return response([
+          'message' => 'Delete Ballroom Failed',
+          'data' => null,
+      ], 400);
+
+      
+  }
+
+  //Method untuk mengubah 1 data Ballroom (UPDATE)
+  public function update(Request $request, $id){
+        $ballrooms = Ballroom::find($id); //Mencari data Ballroom berdasarkan id
+
+        $updateData = $request->all(); //Mengambil semua input dari API Client
+        $validator = Validator::make($updateData, [
+            'namaPemesan' => 'required',
+            'tempat' => 'required',
+            'fasilitas' => 'required',
+            'jenisPembayaran' => 'required',
+        ]); //Membuat rule validasi input
+
+        if($validator->fails()){
+            return response()->json($validator->errors(), 400);
+        }
+        
+        
+        if($ballrooms) {
+
+            //update post
+            $ballrooms->namaPemesan = $updateData['namaPemesan']; //Edit judulBallroom
+            $ballrooms->tempat = $updateData['tempat']; //Edit isbn
+            $ballrooms->fasilitas = $updateData['fasilitas']; //Edit tahunterbit
+            $ballrooms->jenisPembayaran = $updateData['jenisPembayaran']; //Edit Pembayaran
+
+            if($ballrooms->save()){
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Update Ballroom Berhasil',
+                    'data'    => $ballrooms  
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Update Ballroom Gagal',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Ballroom Not Found',
         ], 404);
-    } //Return message saat data buku tidak ditemukan
-
-    if($buku->delete()){
-        return response([
-            'message' => 'Delete Buku Success',
-            'data' => $buku
-        ], 200);
-    } //Return message saat berhasil menghapus data buku
-
-    return response([
-        'message' => 'Delete Buku Failed',
-        'data' => null,
-    ], 400);
-}
-
-//Method untuk mengubah 1 data buku (UPDATE)
-public function update(Request $request, $id){
-    $buku = Buku::find($id); //Mencari data buku berdasarkan id
-
-    if(is_null($buku)){
-        return response([
-            'message' => 'Buku Not Found',
-            'data' => null
-        ], 404);
-    } //Return message saat data buku tidak ditemukan
-
-    $updateData = $request->all();
-    $validate = Validator::make($updateData, [
-        'judulBuku' => 'required|max:60|regex:/^[\pL\s\-]+$/u',
-        'isbn' => 'required|numeric',
-        'pengarang' => 'required',
-        'tahunTerbit' => 'required|numeric|digits:4'
-    ]); //Membuat rule validasi input
-
-    if($validate->fails()){
-        return response(['message' => $validate->errors()], 400); //Return error invalid input
     }
-
-    $buku->judulBuku = $updateData['judulBuku']; //Edit judulBuku
-    $buku->isbn = $updateData['isbn']; //Edit isbn
-    $buku->tahunTerbit = $updateData['tahunTerbit']; //Edit tahunterbit
-    $buku->pengarang = $updateData['pengarang']; //Edit pengarang
-
-    if($buku->save()){
-        return response([
-            'message' => 'Update Buku Success',
-            'data' => $buku
-        ], 200);
-    } //Return data buku yang telah di EDIT dalam bentuk JSON
-
-    return response([
-        'message' => 'Update Buku Failed',
-        'data' => null
-    ], 400);
-}
 }

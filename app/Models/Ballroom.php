@@ -16,9 +16,10 @@ class Ballroom extends Model
 * @var array
 */
 protected $fillable = [
-    'jenis',
-    'jumlah',
-    'harga',
+    'namaPemesan',
+    'tempat',
+    'fasilitas',
+    'jenisPembayaran',
     ]; 
 
     public function getCreatedAttribute()

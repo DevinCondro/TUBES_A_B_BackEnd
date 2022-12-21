@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Pengguna;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Auth\Events\Verified;
 
 class AuthController extends Controller
 {
@@ -14,19 +15,18 @@ class AuthController extends Controller
     {
         $registrationData = $request->all();
         $validate = Validator::make($registrationData,[
-            'name'=>'required|max:60',
-            'email'=>'required|email:rfc,dns',
-            'nomorIdentitas' => 'required|max:10',
-            'username' => 'required|max:20',
-            'password'=>'required'
-        ]);
+            // 'nama'=>'required|max:60',
+            // 'email'=>'required|email:rfc,dns',
+            // 'tanggal_lahir' => 'required',
+            // 'password'=>'required'
+        ]); 
 
         if($validate->fails())
             return response(['message' => $validate->errors()], 400);
         
         $registrationData['password'] = bcrypt($request->password);
         $user = User::create($registrationData);
-        $user->sendApiEmailVerificationNotification();
+        $user->sendEmailVerificationNotification();
         return response([
             'message' => 'Register Succes',
             'user' => $user
@@ -37,13 +37,15 @@ class AuthController extends Controller
     {
         $loginData = $request->all();
         $validate = Validator::make($loginData, [
-            'email' => 'required|email:rfc,dns',
-            'password' => 'required'
+            // 'email' => 'required',
+            // 'password' => 'required'
         ]);
+        // @dd($loginData);
 
         if($validate->fails())
             return response(['message' => $validate->errors()], 400);
 
+            // @dd($loginData);
         if(!Auth::attempt($loginData))
             return response(['message' => 'Invalid Credentials'], 401);
 
@@ -60,6 +62,33 @@ class AuthController extends Controller
             'user' => $user,
             'token_type' => 'Bearer',
             'access_token' => $token
+        ]);
+    }
+
+    public function verify(Request $request) {
+        $user = User::findOrFail($request->id);
+
+        if (! hash_equals((string) $request->hash, sha1($user->getEmailForVerification()))) {
+            return response()->json([
+                "message" => "Unauthorized",
+                "success" => false
+            ]);
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json([
+                "message" => "User already verified!",
+                "success" => false
+            ]);
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return response()->json([
+            "message" => "Email verified successfully!",
+            "success" => true
         ]);
     }
 }
